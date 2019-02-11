@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans xmlns:beans="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+    	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xsi:schemaLocation="
+			http://www.springframework.org/schema/beans
+			http://www.springframework.org/schema/beans/spring-beans.xsd
+			http://www.springframework.org/schema/context
+			http://www.springframework.org/schema/context/spring-context.xsd
+			http://www.springframework.org/schema/tx 
+			http://www.springframework.org/schema/tx/spring-tx.xsd
+			http://www.springframework.org/schema/mvc
+			http://www.springframework.org/schema/mvc/spring-mvc.xsd">
+
+	<!-- DispatcherServlet Context: defines this servlet's request-processing 
+		infrastructure -->
+
+	<!-- Enables the Spring MVC @Controller programming model -->
+	<mvc:annotation-driven />
+	<context:component-scan base-package="com.luv2code.spring" />
+
+	<!-- Resolves views selected for rendering by @Controllers to .jsp resources 
+		in the /WEB-INF/views directory -->
+	<beans:bean
+		class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+		<beans:property name="prefix" value="/WEB-INF/views/" />
+		<beans:property name="suffix" value=".jsp" />
+	</beans:bean>
+	
+	<!-- Load the Custom message Resources -->
+	
+	 <!-- Step 1: Define Database DataSource / connection pool -->
+	<beans:bean id="myDataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource"
+          destroy-method="close">
+        <beans:property name="driverClass" value="org.postgresql.Driver" />
+        <beans:property name="jdbcUrl" value="jdbc:postgresql://localhost:5432/sprtest" />
+        <beans:property name="user" value="postgres" />
+        <beans:property name="password" value="postgres" /> 
+
+        <!-- these are connection pool properties for C3P0 -->
+		<beans:property name="initialPoolSize" value="5"/>
+        <beans:property name="minPoolSize" value="5" />
+        <beans:property name="maxPoolSize" value="20" />
+        <beans:property name="maxIdleTime" value="30000" />
+	</beans:bean>  
+	
+    <!-- Step 2: Setup Hibernate session factory -->
+	<beans:bean id="sessionFactory"
+		class="org.springframework.orm.hibernate5.LocalSessionFactoryBean">
+		<beans:property name="dataSource" ref="myDataSource" />
+		<beans:property name="packagesToScan" value="com.luv2code.spring.*" />
+		<beans:property name="hibernateProperties">
+		   <beans:props>
+		      <beans:prop key="hibernate.dialect">org.hibernate.dialect.PostgreSQLDialect</beans:prop>
+		      <beans:prop key="hibernate.show_sql">true</beans:prop>
+		   </beans:props>
+		</beans:property>
+   </beans:bean>	  
+
+    <!-- Step 3: Setup Hibernate transaction manager -->
+	<beans:bean id="myTransactionManager"
+            class="org.springframework.orm.hibernate5.HibernateTransactionManager">
+        <beans:property name="sessionFactory" ref="sessionFactory"/>
+    </beans:bean>
+    
+    <!-- Step 4: Enable configuration of transactional behavior based on annotations -->
+	<tx:annotation-driven transaction-manager="myTransactionManager" />
+
+	<!-- Add support for reading web resources: css, images, js, etc ... -->
+	<mvc:resources location="/resources/" mapping="/resources/**"></mvc:resources>
+
+</beans:beans>
